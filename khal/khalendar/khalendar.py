@@ -168,12 +168,23 @@ class Calendar(object):
 
         should be called after every change to the vdir
         """
+        # This compares folder-content against db-content
         status = True
+        fs_hrefs = []
         for href, etag in self._storage.list():
+            fs_hrefs.append(href)
             if etag != self._dbtool.get_etag(href, self.name):
                 status = status and self.update_vevent(href)
         if status:
             self._dbtool.set_ctag(self.name, self.local_ctag())
+
+        # this compares db-content against folder-content
+        # if an item is removed from the vdir, we also delete it in the db
+        # in this case we asume, that the vdir content is the place to trust
+        for href,account in self._dbtool.get_all_href_from_db([self.name]):
+            if href not in fs_hrefs:
+                self._dbtool.delete(href,self.name)
+
 
     def update_vevent(self, href):
         event, etag = self._storage.get(href)
