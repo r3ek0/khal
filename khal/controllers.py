@@ -35,23 +35,31 @@ def get_agenda(collection, width):
     today = datetime.date.today()
     tomorrow = today + datetime.timedelta(days=1)
     daylist = [(today, 'Today:'), (tomorrow, 'Tomorrow:')]
+    for d in range(2,30):
+        daynext = today + datetime.timedelta(days=d)
+        nextday = (daynext,daynext.strftime("%d.%m.%Y:"))
+        daylist.append(nextday)
+
     for day, dayname in daylist:
         # TODO unify allday and datetime events
         start = datetime.datetime.combine(day, datetime.time.min)
         end = datetime.datetime.combine(day, datetime.time.max)
 
-        event_column.append(bstring(dayname))
 
         all_day_events = collection.get_allday_by_time_range(day)
         events = collection.get_datetime_by_time_range(start, end)
+
+        if len(events) != 0 or len(all_day_events) != 0:
+            event_column.append(bstring(dayname))
+
         for event in all_day_events:
             desc = textwrap.wrap(event.compact(day), width)
-            event_column.extend([colored(d, event.color) for d in desc])
+            event_column.extend([" " + colored(d, event.color) for d in desc])
 
         events.sort(key=lambda e: e.start)
         for event in events:
             desc = textwrap.wrap(event.compact(day), width)
-            event_column.extend([colored(d, event.color) for d in desc])
+            event_column.extend([" " + colored(d, event.color) for d in desc])
     return event_column
 
 
